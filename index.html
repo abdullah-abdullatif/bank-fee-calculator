@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/css/bootstrap.min.css">
+
+
+</head>
+
+<body>
+    <div class="my_container">
+        <div class="row py-5">
+            <div class="col-6 m-auto text-center">
+
+                <h1 class="py-4">Calculate the price</h1>
+
+                <input class="form-control my-3" id="num" type="number" placeholder="Price in Dollars $">
+
+
+                <button type="button" class="btn btn-primary my-3" onclick="calcPrice()">Calculate</button>
+
+                <h3 class="py-3" id="answ"></h3>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+
+
+        function calcPrice() {
+
+            let num = document.getElementById('num').value;
+
+            let conv = num * 30.95;
+            let fee = conv * (10 / 100);
+
+            let total = conv + fee;
+
+            console.log(conv);
+            console.log(total);
+
+
+            document.getElementById('answ').innerText = (Math.round(total * 100) / 100).toFixed(2) + ' EGP';
+
+        }
+
+    </script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>
