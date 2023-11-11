@@ -37,13 +37,21 @@
 
             let num = document.getElementById('num').value;
 
-            let conv = num * 30.95;
+            let conv = num * 31.577772;
             let fee = conv * (10 / 100);
 
-            let total = conv + fee;
+            let total = conv + fee + 10;
 
             console.log(conv);
             console.log(total);
+
+            // let conv = num * 30.95;
+            // let fee = conv * (10 / 100);
+
+            // let total = conv + fee;
+
+            // console.log(conv);
+            // console.log(total);
 
 
             document.getElementById('answ').innerText = (Math.round(total * 100) / 100).toFixed(2) + ' EGP';
