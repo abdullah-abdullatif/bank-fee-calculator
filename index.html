@@ -1,68 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/css/bootstrap.min.css">
-
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>USD to EGP Fee Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .calculator {
+      background: #fff;
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 1.1em;
+    }
+  </style>
 </head>
-
 <body>
-    <div class="my_container">
-        <div class="row py-5">
-            <div class="col-6 m-auto text-center">
+  <div class="calculator">
+    <h2>USD to EGP Fee Calculator</h2>
+    <div class="result" id="result">Calculating...</div>
+  </div>
 
-                <h1 class="py-4">Calculate the price</h1>
+  <script>
+    async function fetchExchangeRate() {
+      try {
+        const response = await fetch('https://api.exchangerate.host/latest?base=USD&symbols=EGP');
+        const data = await response.json();
+        return data.rates.EGP;
+      } catch (error) {
+        console.error('Error fetching exchange rate:', error);
+        return null;
+      }
+    }
 
-                <input class="form-control my-3" id="num" type="number" placeholder="Price in Dollars $">
+    async function calculate() {
+      const exchangeRate = await fetchExchangeRate();
+      if (!exchangeRate) {
+        document.getElementById('result').innerText = 'Failed to fetch exchange rate.';
+        return;
+      }
 
+      const baseAmount = 1;
+      const markup = baseAmount * 0.05 + 0.20;
+      const totalAfterMarkup = baseAmount + markup;
 
-                <button type="button" class="btn btn-primary my-3" onclick="calcPrice()">Calculate</button>
+      const paypalFee = totalAfterMarkup * 0.044 + 0.30;
+      const totalAfterFees = totalAfterMarkup + paypalFee;
 
-                <h3 class="py-3" id="answ"></h3>
+      const finalEGP = totalAfterFees * exchangeRate;
+      const effectiveRate = finalEGP / baseAmount;
 
-                <br>
-                <p>Developed by Abdullah Abdullatif</p>
+      document.getElementById('result').innerHTML = `
+        <p>Current USD to EGP rate: <strong>${exchangeRate.toFixed(2)}</strong></p>
+        <p>Total after markup and PayPal fees: <strong>$${totalAfterFees.toFixed(2)}</strong></p>
+        <p>Equivalent in EGP: <strong>£${finalEGP.toFixed(2)}</strong></p>
+        <p>Effective dollar price after all fees: <strong>£${effectiveRate.toFixed(2)}</strong></p>
+      `;
+    }
 
-            </div>
-        </div>
-    </div>
-
-    <script>
-
-
-
-        function calcPrice() {
-
-            let num = document.getElementById('num').value;
-
-            let conv = num * 31.577772;
-            let fee = conv * (10 / 100);
-
-            let total = conv + fee + 10;
-
-            console.log(conv);
-            console.log(total);
-
-            // let conv = num * 30.95;
-            // let fee = conv * (10 / 100);
-
-            // let total = conv + fee;
-
-            // console.log(conv);
-            // console.log(total);
-
-
-            document.getElementById('answ').innerText = (Math.round(total * 100) / 100).toFixed(2) + ' EGP';
-
-        }
-
-    </script>
-
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/js/bootstrap.min.js"></script>
-
+    calculate();
+  </script>
 </body>
-
 </html>
