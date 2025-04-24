@@ -3,73 +3,94 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>USD to EGP Fee Calculator</title>
+  <title>USD to EGP Full Fee Calculator</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f0f4f8;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #e0f7fa, #e1bee7);
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      margin: 0;
     }
     .calculator {
-      background: #fff;
-      padding: 20px 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
       text-align: center;
-      max-width: 400px;
+      max-width: 460px;
       width: 100%;
     }
     h2 {
       margin-bottom: 20px;
+      color: #0070ba;
     }
-    .form-control {
+    .form-control, .calculator input[type="number"] {
       width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
+      padding: 12px;
+      margin-bottom: 20px;
       border: 1px solid #ccc;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 16px;
+      box-sizing: border-box;
     }
     button {
-      padding: 10px 20px;
+      padding: 12px;
       font-size: 16px;
       font-weight: bold;
       border: none;
       background-color: #0070ba;
       color: white;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
       width: 100%;
+      transition: background 0.3s ease;
     }
     button:hover {
       background-color: #005a9e;
     }
     .result {
-      margin-top: 20px;
-      font-size: 1.1em;
+      margin-top: 25px;
+      font-size: 1rem;
+      color: #333;
+    }
+    .result p {
+      margin: 8px 0;
+    }
+    .small-note {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 10px;
+    }
+    .footer {
+      margin-top: 25px;
+      font-size: 0.9rem;
+      color: #777;
     }
   </style>
 </head>
 <body>
   <div class="calculator">
-    <h2>USD to EGP Fee Calculator</h2>
+    <h2>USD to EGP Full Fee Calculator</h2>
+    <input type="number" id="amount" class="form-control" placeholder="Enter amount in USD" min="0.01" step="0.01">
     <select id="countryType" class="form-control">
       <option value="same">Same Country</option>
       <option value="different">Different Country</option>
     </select>
     <button onclick="calculate()">Calculate</button>
-    <div class="result" id="result">Calculating...</div>
+    <div class="result" id="result">Enter an amount and choose a country type</div>
+    <div id="apiNote" class="small-note"></div>
+    <div class="footer">Powered by open.er-api.com • Developed by Abdullah Abdullatif</div>
   </div>
 
   <script>
     async function fetchExchangeRate() {
       try {
-        const response = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd/egp.json');
+        const response = await fetch('https://open.er-api.com/v6/latest/USD');
         const data = await response.json();
-        return data.egp;
+        return data.rates.EGP;
       } catch (error) {
         console.error('Error fetching exchange rate:', error);
         return null;
@@ -77,6 +98,12 @@
     }
 
     async function calculate() {
+      const userAmount = parseFloat(document.getElementById('amount').value);
+      if (isNaN(userAmount) || userAmount <= 0) {
+        document.getElementById('result').innerText = 'Please enter a valid amount in USD.';
+        return;
+      }
+
       const exchangeRate = await fetchExchangeRate();
       const countryType = document.getElementById('countryType').value;
 
@@ -85,31 +112,38 @@
         return;
       }
 
-      const baseAmount = 1; // $1 base
-      const markup = baseAmount * 0.05 + 0.20; // 5% + $0.20 markup
-      const amountWithMarkup = baseAmount + markup;
+      document.getElementById('apiNote').innerText = `Bank dollar rate: 1 USD = ${exchangeRate.toFixed(2)} EGP`;
+
+      const markupUSD = userAmount * 0.05 + 0.15;
+      const markupEGP = markupUSD * exchangeRate;
+      const amountWithMarkup = userAmount + markupUSD;
 
       let paypalFee = 0;
+      let paypalRate = 0;
+
       if (countryType === 'same') {
-        paypalFee = amountWithMarkup * 0.034 + 0.30;
+        paypalRate = 0.034;
+        paypalFee = userAmount * paypalRate + 0.30;
       } else {
-        paypalFee = amountWithMarkup * 0.044 + 0.30;
+        paypalRate = 0.044;
+        paypalFee = userAmount * paypalRate + 0.30;
       }
 
-      const finalAmountUSD = amountWithMarkup + paypalFee;
-      const finalAmountEGP = finalAmountUSD * exchangeRate;
+      const totalUSDWithPaypalOnly = userAmount + paypalFee;
+      const totalEGP = (amountWithMarkup + paypalFee) * exchangeRate;
+
+      const paypalSendRequired = ((userAmount + 0.30) / (1 - paypalRate)).toFixed(2);
 
       document.getElementById('result').innerHTML = `
-        <p>Dollar base price: $1</p>
-        <p>+ Markup & fixed: $${markup.toFixed(2)}</p>
-        <p>+ PayPal Fees: $${paypalFee.toFixed(2)}</p>
-        <p><strong>Total USD charged: $${finalAmountUSD.toFixed(2)}</strong></p>
-        <p><strong>Total in EGP: £${finalAmountEGP.toFixed(2)}</strong></p>
-        <p>So, your effective dollar price after all fees is <strong>£${finalAmountEGP.toFixed(2)}</strong></p>
+        <p><strong>Original Amount:</strong> $${userAmount.toFixed(2)}</p>
+        <p><strong>+ Markup Fees:</strong> £${markupEGP.toFixed(2)}</p>
+        <p><strong>+ PayPal Fees:</strong> $${paypalFee.toFixed(2)}</p>
+        <p><strong>Total USD charged (PayPal fees only):</strong> $${totalUSDWithPaypalOnly.toFixed(2)}</p>
+        <p><strong>Total in EGP (including markup):</strong> £${totalEGP.toFixed(2)}</p>
+        <p><strong>Effective dollar price after all fees:</strong> £${(totalEGP / userAmount).toFixed(2)}</strong></p>
+        <p>To receive $${userAmount.toFixed(2)} in PayPal, send: $${paypalSendRequired}</p>
       `;
     }
-
-    calculate(); // Initial calculation on load
   </script>
 </body>
 </html>
